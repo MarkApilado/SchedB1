@@ -31,8 +31,15 @@
       border-bottom: 4px solid var(--suzuki-red);
     }
 
+    #currentDate {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #333;
+    }
+
     main {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 2rem auto;
       background: white;
       border-radius: 12px;
@@ -71,7 +78,7 @@
       cursor: text;
     }
 
-    select {
+    select, input[type="number"], input[type="time"] {
       padding: 0.4rem;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -110,28 +117,21 @@
     }
 
     @media print {
-      body {
-        background: white;
-      }
-      main {
-        box-shadow: none;
-        border: none;
-      }
-      .controls, footer {
-        display: none;
-      }
+      body { background: white; }
+      main { box-shadow: none; border: none; }
+      .controls, footer { display: none; }
     }
   </style>
 </head>
 <body>
-  <header>
-    Service Appointment
-  </header>
+  <header>Service Appointment</header>
+  <div id="currentDate"></div>
 
   <main>
     <table id="scheduleTable">
       <thead>
         <tr>
+          <th>Select</th>
           <th>Client #</th>
           <th>Appointment Time</th>
           <th>Customer Name</th>
@@ -139,65 +139,89 @@
           <th>Vehicle Model</th>
           <th>Service Type</th>
           <th>Job Status</th>
+          <th>Bay Number</th>
         </tr>
       </thead>
       <tbody>
         <tr>
+          <td><input type="checkbox" class="rowSelect"></td>
           <td contenteditable="true"></td>
-          <td contenteditable="true"></td>
+          <td><input type="time" step="60"></td>
           <td contenteditable="true"></td>
           <td contenteditable="true"></td>
           <td contenteditable="true"></td>
           <td>
             <select>
-              <option value="PMS">PMS</option>
-              <option value="General Job">General Job</option>
-              <option value="BRP">BRP</option>
+              <option>PMS</option>
+              <option>General Job</option>
+              <option>BRP</option>
+              <option>Warranty</option>
+              <option>Check-up</option>
             </select>
           </td>
           <td>
             <select>
-              <option value="Waiting For Client">Waiting For Client</option>
-              <option value="On-Going">On-Going</option>
-              <option value="Ready for Send Off">Ready for Send Off</option>
-              <option value="Done">Done</option>
+              <option>Waiting For Client</option>
+              <option>On-Going Checklist</option>
+              <option>On-Going PMS</option>
+              <option>Ready for Send Off</option>
+              <option>Done</option>
+              <option>Cancelled</option>
+              <option>Rescheduled</option>
             </select>
           </td>
+          <td contenteditable="true"></td>
         </tr>
       </tbody>
     </table>
 
     <div class="controls">
       <button onclick="addRow()">Add Row</button>
-      <button onclick="removeRow()">Remove Row</button>
+      <button onclick="removeSelectedRows()">Remove Selected</button>
+      <button onclick="removeAllRows()">Remove All</button>
     </div>
   </main>
 
-  <footer>
-    © 2025 Suzuki Service | Minimalist Schedule Board
-  </footer>
+  <footer>© 2025 Suzuki Service | Minimalist Schedule Board</footer>
 
   <script>
+    // Set current date
+    document.getElementById('currentDate').textContent = "Date: " + new Date().toLocaleDateString();
+
     function addRow() {
-      const tableBody = document.getElementById('scheduleTable').getElementsByTagName('tbody')[0];
+      const tableBody = document.querySelector('#scheduleTable tbody');
       const newRow = tableBody.rows[0].cloneNode(true);
-      
+
       newRow.querySelectorAll('td').forEach(td => {
-        if (td.hasAttribute('contenteditable')) td.textContent = '';
+        const checkbox = td.querySelector('.rowSelect');
+        if(checkbox) checkbox.checked = false;
+        if(td.hasAttribute('contenteditable')) td.textContent = '';
         const select = td.querySelector('select');
-        if (select) select.selectedIndex = 0;
+        if(select) select.selectedIndex = 0;
+        const timeInput = td.querySelector('input[type="time"]');
+        if(timeInput) timeInput.value = '';
       });
-      
+
       tableBody.appendChild(newRow);
     }
 
-    function removeRow() {
-      const tableBody = document.getElementById('scheduleTable').getElementsByTagName('tbody')[0];
-      if (tableBody.rows.length > 1) {
-        tableBody.deleteRow(tableBody.rows.length - 1);
-      } else {
-        alert('You must have at least one row.');
-      }
+    function removeSelectedRows() {
+      const tableBody = document.querySelector('#scheduleTable tbody');
+      const rows = tableBody.querySelectorAll('tr');
+      let removed = false;
+      rows.forEach(row => {
+        const checkbox = row.querySelector('.rowSelect');
+        if(checkbox.checked) {
+          tableBody.removeChild(row);
+          removed = true;
+        }
+      });
+      if(!removed) alert("Select at least one row to remove.");
+    }
+
+    function removeAllRows() {
+      const tableBody = document.querySelector('#scheduleTable tbody');
+      tableBody.innerHTML = '';
     }
   </script>
 </body>
